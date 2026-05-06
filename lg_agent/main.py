@@ -2,27 +2,9 @@
 =============================================================
  FRAMEWORK 1 — LangGraph  |  Smart Task Executor
 =============================================================
- Flow:   User Input → Planner → Executor → Critic
-                                              ↓
-                                         (if fail)
-                                              ↓
-                                          Refiner → Critic (loop, max 3)
-                                              ↓
-                                         Final Output
-
- Concepts demonstrated:
-  • StateGraph with typed state
-  • Conditional edges (routing)
-  • Controlled retry loop (max_iterations guard)
-  • Edge cases:  bad planner output, empty executor, infinite-loop guard
-=============================================================
 """
 
 import sys, os
-os.environ.setdefault("PYTHONIOENCODING", "utf-8")
-os.environ.setdefault("PYTHONUTF8", "1")
-if hasattr(sys.stdout, "reconfigure"):
-    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from typing import TypedDict, List, Optional
@@ -60,7 +42,7 @@ def planner_node(state: AgentState) -> AgentState:
     → Breaks the user task into numbered, actionable steps.
     Edge-case handled: if LLM returns an empty plan we inject a fallback.
     """
-    console.print(Rule("[bold cyan]🧠 PLANNER AGENT[/bold cyan]"))
+    console.print(Rule("[bold cyan]PLANNER AGENT[/bold cyan]"))
 
     prompt = f"""You are a strategic planner.
 Given this user task: "{state['user_input']}"
@@ -74,9 +56,9 @@ Keep it concise – maximum 5 steps. Output ONLY the numbered list."""
     # Edge-case: empty plan
     if not plan:
         plan = "1. Understand the topic\n2. Write an introduction\n3. Cover key points\n4. Add examples\n5. Write a conclusion"
-        console.print("[yellow]⚠️  Planner returned empty – using fallback plan.[/yellow]")
+        console.print("[yellow]Planner returned empty - using fallback plan.[/yellow]")
 
-    console.print(Panel(plan, title="📋 Plan", border_style="cyan"))
+    console.print(Panel(plan, title="Plan", border_style="cyan"))
     return {**state, "plan": plan}
 
 
@@ -86,7 +68,7 @@ def executor_node(state: AgentState) -> AgentState:
     → Generates content following the plan.
     Edge-case handled: empty/very-short content triggers retry flag.
     """
-    console.print(Rule("[bold green]✍️  EXECUTOR AGENT[/bold green]"))
+    console.print(Rule("[bold green]EXECUTOR AGENT[/bold green]"))
 
     prompt = f"""You are a skilled content writer.
 Task: "{state['user_input']}"
@@ -101,11 +83,11 @@ Write a detailed, high-quality response. Be specific and informative."""
 
     # Edge-case: suspiciously short content
     if len(content) < 100:
-        console.print(f"[yellow]⚠️  Executor produced very short content ({len(content)} chars). Marking for refinement.[/yellow]")
+        console.print(f"[yellow]Executor produced very short content ({len(content)} chars). Marking for refinement.[/yellow]")
         content = content or "[EXECUTOR FAILED TO GENERATE CONTENT]"
 
     console.print(Panel(content[:500] + ("..." if len(content) > 500 else ""),
-                        title="📝 Draft Content", border_style="green"))
+                        title="Draft Content", border_style="green"))
     return {**state, "content": content}
 
 
@@ -114,7 +96,7 @@ def critic_node(state: AgentState) -> AgentState:
     Critic Agent
     → Reviews content and returns PASS or FAIL:<reason>.
     """
-    console.print(Rule("[bold red]🔍 CRITIC AGENT[/bold red]"))
+    console.print(Rule("[bold red]CRITIC AGENT[/bold red]"))
 
     # Use refined content if available, otherwise original
     content_to_check = state.get("refined_content") or state.get("content", "")
@@ -145,7 +127,7 @@ Respond with ONLY the verdict, nothing else."""
             verdict = "FAIL: Content quality insufficient"
 
     console.print(Panel(verdict,
-                        title="⚖️  Critic Verdict",
+                        title="Critic Verdict",
                         border_style="red" if verdict.startswith("FAIL") else "green"))
     return {**state, "critic_verdict": verdict}
 
@@ -155,10 +137,10 @@ def refiner_node(state: AgentState) -> AgentState:
     Refiner Agent
     → Fixes issues identified by the Critic.
     """
-    console.print(Rule("[bold yellow]🔧 REFINER AGENT[/bold yellow]"))
+    console.print(Rule("[bold yellow]REFINER AGENT[/bold yellow]"))
 
     iterations = state.get("iterations", 0) + 1
-    console.print(f"[yellow]🔄 Refinement iteration: {iterations}/{MAX_ITERATIONS}[/yellow]")
+    console.print(f"[yellow]Refinement iteration: {iterations}/{MAX_ITERATIONS}[/yellow]")
 
     content_to_fix = state.get("refined_content") or state.get("content", "")
     reason = state.get("critic_verdict", "unknown issue")
@@ -178,7 +160,7 @@ Make it comprehensive, accurate, and well-structured."""
     refined = result.content.strip()
 
     console.print(Panel(refined[:500] + ("..." if len(refined) > 500 else ""),
-                        title="✨ Refined Content", border_style="yellow"))
+                        title="Refined Content", border_style="yellow"))
     return {**state, "refined_content": refined, "iterations": iterations}
 
 
@@ -197,14 +179,14 @@ def route_after_critic(state: AgentState) -> str:
     iterations = state.get("iterations", 0)
 
     if verdict == "PASS":
-        console.print("[bold green]✅ Critic PASSED – finalising output.[/bold green]")
+        console.print("[bold green]Critic PASSED - finalising output.[/bold green]")
         return "finalize"
 
     if iterations >= MAX_ITERATIONS:
-        console.print(f"[bold red]🛑 Max iterations ({MAX_ITERATIONS}) reached – exiting loop.[/bold red]")
+        console.print(f"[bold red]Max iterations ({MAX_ITERATIONS}) reached - exiting loop.[/bold red]")
         return "finalize"
 
-    console.print(f"[bold yellow]🔁 Critic FAILED – routing to Refiner (attempt {iterations+1}/{MAX_ITERATIONS}).[/bold yellow]")
+    console.print(f"[bold yellow]Critic FAILED - routing to Refiner (attempt {iterations+1}/{MAX_ITERATIONS}).[/bold yellow]")
     return "refine"
 
 
@@ -261,7 +243,7 @@ def build_graph() -> StateGraph:
 def run(user_input: str):
     console.print(Panel(
         f"[bold white]{user_input}[/bold white]",
-        title="[bold magenta]🚀 LangGraph — Smart Task Executor[/bold magenta]",
+        title="[bold magenta]LangGraph - Smart Task Executor[/bold magenta]",
         border_style="magenta"
     ))
 
@@ -278,10 +260,10 @@ def run(user_input: str):
     app = build_graph()
     final_state = app.invoke(initial_state)
 
-    console.print(Rule("[bold magenta]🎯 FINAL OUTPUT[/bold magenta]"))
+    console.print(Rule("[bold magenta]FINAL OUTPUT[/bold magenta]"))
     console.print(Panel(
         final_state["final_output"],
-        title="✅ Result",
+        title="Result",
         border_style="magenta"
     ))
     return final_state

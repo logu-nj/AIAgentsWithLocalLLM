@@ -2,29 +2,9 @@
 =============================================================
  FRAMEWORK 3 — CrewAI  |  Smart Task Executor
 =============================================================
- Flow:  Hierarchical crew with role-based task delegation
-        Planner (strategist) → Executor (writer)
-                                → Critic (reviewer)
-                                    → Refiner (editor, conditional)
-
- Concepts demonstrated:
-  • Role-based agent design (goal + backstory + tools)
-  • Task dependencies  (executor depends on planner)
-  • Sequential process with conditional refinement
-  • Custom Ollama LLM integration
-
- Edge cases handled:
-  • Task dependency failure → fallback plan injected
-  • Role confusion → tight backstory + goal constraints
-  • Weak validation → Critic task output validated programmatically
-=============================================================
 """
 
 import sys, os
-os.environ.setdefault("PYTHONIOENCODING", "utf-8")
-os.environ.setdefault("PYTHONUTF8", "1")
-if hasattr(sys.stdout, "reconfigure"):
-    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from crewai import Agent, Task, Crew, Process, LLM
@@ -104,8 +84,7 @@ content to be comprehensive, accurate, and compelling.""",
 
 def build_tasks(user_input: str):
     planning_task = Task(
-        description=f"""Create a detailed action plan for this task: "{user_input}"
-        
+        description=f"""Create a detailed action plan for this task: "{user_input}"  
 Output a numbered list of 4-6 clear steps that a writer should follow.
 Each step should be specific and actionable.
 Output ONLY the numbered list.""",
@@ -115,7 +94,6 @@ Output ONLY the numbered list.""",
 
     execution_task = Task(
         description=f"""Write comprehensive content for: "{user_input}"
-
 Follow the plan provided by the Strategic Task Planner exactly.
 Produce detailed, high-quality content that covers all aspects of the topic.
 Include specific examples, data points, and practical insights where relevant.""",
@@ -126,7 +104,6 @@ Include specific examples, data points, and practical insights where relevant.""
 
     critic_task = Task(
         description=f"""Review the content written for: "{user_input}"
-
 Evaluate based on:
 1. Completeness - Does it cover the topic thoroughly?
 2. Accuracy - Is the information correct?
@@ -143,7 +120,6 @@ Respond with EXACTLY:
 
     refiner_task = Task(
         description=f"""Improve the content for: "{user_input}"
-
 You have received feedback from the Quality Assurance Critic.
 Address ALL the stated issues and rewrite the content to be excellent.
 The improved version should clearly pass a quality review.""",
@@ -164,14 +140,14 @@ MAX_REFINEMENTS = 3
 def run(user_input: str):
     console.print(Panel(
         f"[bold white]{user_input}[/bold white]",
-        title="[bold yellow]🚀 CrewAI — Smart Task Executor[/bold yellow]",
+        title="[bold yellow]CrewAI - Smart Task Executor[/bold yellow]",
         border_style="yellow"
     ))
 
     planning_task, execution_task, critic_task, refiner_task = build_tasks(user_input)
 
     # ── Phase 1: Plan + Execute + Critique ──────────────
-    console.print(Rule("[bold yellow]Phase 1: Plan → Execute → Critique[/bold yellow]"))
+    console.print(Rule("[bold yellow]Phase 1: Plan > Execute > Critique[/bold yellow]"))
 
     phase1_crew = Crew(
         agents=[planner_agent, executor_agent, critic_agent],
@@ -183,7 +159,7 @@ def run(user_input: str):
     phase1_result = phase1_crew.kickoff()
     critic_output = str(phase1_result.raw).strip()
 
-    console.print(Panel(critic_output, title="🔍 Critic Verdict", border_style="red"))
+    console.print(Panel(critic_output, title="Critic Verdict", border_style="red"))
 
     # ── Phase 2: Conditional Refinement ─────────────────
     current_content = str(execution_task.output.raw if execution_task.output else "")
@@ -193,7 +169,7 @@ def run(user_input: str):
         console.print(Rule("[bold orange3]Phase 2: Refinement Loop[/bold orange3]"))
 
         for attempt in range(1, MAX_REFINEMENTS + 1):
-            console.print(f"[yellow]🔄 Refinement attempt {attempt}/{MAX_REFINEMENTS}[/yellow]")
+            console.print(f"[yellow]Refinement attempt {attempt}/{MAX_REFINEMENTS}[/yellow]")
 
             # Build a fresh refiner task with updated context
             fresh_refiner_task = Task(
@@ -229,10 +205,10 @@ Respond with EXACTLY "PASS" or "FAIL: <reason>". Be strict.""",
             new_verdict = str(ref_result.raw).strip()
             new_content = str(fresh_refiner_task.output.raw if fresh_refiner_task.output else current_content)
 
-            console.print(Panel(new_verdict, title=f"⚖️  Re-Critic Verdict (attempt {attempt})", border_style="red"))
+            console.print(Panel(new_verdict, title=f"Re-Critic Verdict (attempt {attempt})", border_style="red"))
 
             if "PASS" in new_verdict.upper() and "FAIL" not in new_verdict.upper():
-                console.print(f"[bold green]✅ PASSED after {attempt} refinement(s)![/bold green]")
+                console.print(f"[bold green]PASSED after {attempt} refinement(s)![/bold green]")
                 final_content = new_content
                 break
 
@@ -240,14 +216,14 @@ Respond with EXACTLY "PASS" or "FAIL: <reason>". Be strict.""",
             critic_output = new_verdict
 
             if attempt == MAX_REFINEMENTS:
-                console.print(f"[bold red]🛑 Max refinements ({MAX_REFINEMENTS}) reached. Using best version.[/bold red]")
+                console.print(f"[bold red]Max refinements ({MAX_REFINEMENTS}) reached. Using best version.[/bold red]")
                 final_content = current_content
     else:
-        console.print("[bold green]✅ Content PASSED on first try![/bold green]")
+        console.print("[bold green]Content PASSED on first try![/bold green]")
 
     # ── Final Output ──────────────────────────────────
-    console.print(Rule("[bold yellow]🎯 FINAL OUTPUT[/bold yellow]"))
-    console.print(Panel(final_content, title="✅ Result", border_style="yellow"))
+    console.print(Rule("[bold yellow]FINAL OUTPUT[/bold yellow]"))
+    console.print(Panel(final_content, title="Result", border_style="yellow"))
 
     return final_content
 

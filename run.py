@@ -1,28 +1,4 @@
-#!/usr/bin/env python3
-"""
-=============================================================
- Multi-Agent Learning — Main Entry Point
- Usage:
-   uv run python run.py langgraph
-   uv run python run.py autogen
-   uv run python run.py crewai
-   uv run python run.py adk
-   uv run python run.py compare       # Run all + compare
-   uv run python run.py test          # Edge case tests
-
- Custom task:
-   uv run python run.py langgraph "Explain quantum computing"
-=============================================================
-"""
-
 import sys, os
-
-# ── Windows UTF-8 fix ─────────────────────────────────────
-os.environ["PYTHONIOENCODING"] = "utf-8"
-os.environ["PYTHONUTF8"] = "1"
-if sys.stdout.encoding != "utf-8":
-    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-
 from rich.console import Console
 from rich.panel import Panel
 
@@ -41,8 +17,6 @@ def main():
   python run.py autogen            [dim]→ Run AutoGen framework[/dim]
   python run.py crewai             [dim]→ Run CrewAI framework[/dim]
   python run.py adk                [dim]→ Run Google ADK framework[/dim]
-  python run.py compare            [dim]→ Run all 4 + comparison table[/dim]
-  python run.py test               [dim]→ Run edge case test suite[/dim]
 
 [bold]Custom task:[/bold]
   python run.py langgraph "Your custom task here"

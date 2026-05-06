@@ -3,28 +3,9 @@
  FRAMEWORK 4 — Google Agent Development Kit (ADK)
               Smart Task Executor
 =============================================================
- Flow:  Orchestrator Agent delegates to sub-agents via tools.
-        ADK's pipeline-style execution with schema validation.
-
- Concepts demonstrated:
-  • ADK Agent with tools
-  • Structured tool schema (Pydantic)
-  • Sequential pipeline orchestration
-  • Strict schema enforcement
-  • Error handling on tool failure
-
- Edge cases handled:
-  • Strict schema failures → Pydantic validation
-  • Tool execution errors → try/except with graceful fallback
-  • Limited flexibility → explicit tool contracts
-=============================================================
 """
 
 import sys, os
-os.environ.setdefault("PYTHONIOENCODING", "utf-8")
-os.environ.setdefault("PYTHONUTF8", "1")
-if hasattr(sys.stdout, "reconfigure"):
-    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from typing import Optional
@@ -107,11 +88,11 @@ Output ONLY the numbered list."""
         step_count = len(steps) if steps else 5
 
         result = PlannerOutput(plan=plan_text, step_count=step_count)
-        console.print(Panel(plan_text, title="📋 Planner Tool Output", border_style="cyan"))
+        console.print(Panel(plan_text, title="Planner Tool Output", border_style="cyan"))
         return result
 
     except Exception as e:
-        console.print(f"[red]❌ Planner Tool Error: {e}[/red]")
+        console.print(f"[red]Planner Tool Error: {e}[/red]")
         # Schema-compliant fallback
         fallback_plan = "1. Research the topic\n2. Draft the content\n3. Add examples\n4. Structure the output\n5. Finalize"
         return PlannerOutput(plan=fallback_plan, step_count=5)
@@ -141,13 +122,13 @@ Write detailed, high-quality content. Be comprehensive and specific."""
         result = ExecutorOutput(content=content, word_count=word_count)
         console.print(Panel(
             content[:400] + ("..." if len(content) > 400 else ""),
-            title=f"📝 Executor Tool Output ({word_count} words)",
+            title=f"Executor Tool Output ({word_count} words)",
             border_style="green"
         ))
         return result
 
     except Exception as e:
-        console.print(f"[red]❌ Executor Tool Error: {e}[/red]")
+        console.print(f"[red]Executor Tool Error: {e}[/red]")
         # Schema-compliant minimal fallback
         fallback = f"Content about {inp.user_task}. This is a placeholder due to generation failure."
         return ExecutorOutput(content=fallback, word_count=len(fallback.split()))
@@ -194,11 +175,11 @@ Your response MUST start with PASS or FAIL."""
             )
 
         color = "green" if result.passed else "red"
-        console.print(Panel(result.verdict, title="⚖️  Critic Tool Output", border_style=color))
+        console.print(Panel(result.verdict, title="Critic Tool Output", border_style=color))
         return result
 
     except Exception as e:
-        console.print(f"[red]❌ Critic Tool Error: {e}[/red]")
+        console.print(f"[red]Critic Tool Error: {e}[/red]")
         return CriticOutput(verdict="FAIL: Tool execution error", passed=False, reason=str(e))
 
 
@@ -243,13 +224,13 @@ Then briefly describe what changes you made (1-2 sentences)."""
         result = RefinerOutput(refined_content=refined, changes_made=changes)
         console.print(Panel(
             refined[:400] + ("..." if len(refined) > 400 else ""),
-            title="✨ Refiner Tool Output",
+            title="Refiner Tool Output",
             border_style="yellow"
         ))
         return result
 
     except Exception as e:
-        console.print(f"[red]❌ Refiner Tool Error: {e}[/red]")
+        console.print(f"[red]Refiner Tool Error: {e}[/red]")
         fallback = inp.content + "\n\n[Note: Refinement failed, showing original content]"
         return RefinerOutput(refined_content=fallback, changes_made=f"Refinement failed: {e}")
 
@@ -265,22 +246,22 @@ MAX_REFINEMENTS = 3
 def run(user_input: str):
     console.print(Panel(
         f"[bold white]{user_input}[/bold white]",
-        title="[bold magenta]🚀 Google ADK — Smart Task Executor[/bold magenta]",
+        title="[bold magenta]Google ADK - Smart Task Executor[/bold magenta]",
         border_style="magenta"
     ))
 
     # ── Tool 1: Planner ──────────────────────────────
-    console.print(Rule("[bold cyan]🔧 TOOL CALL: planner_tool[/bold cyan]"))
+    console.print(Rule("[bold cyan]TOOL CALL: planner_tool[/bold cyan]"))
     plan_input = PlannerInput(user_task=user_input)
     plan_output: PlannerOutput = planner_tool(plan_input)
 
     # ── Tool 2: Executor ─────────────────────────────
-    console.print(Rule("[bold green]🔧 TOOL CALL: executor_tool[/bold green]"))
+    console.print(Rule("[bold green]TOOL CALL: executor_tool[/bold green]"))
     exec_input = ExecutorInput(user_task=user_input, plan=plan_output.plan)
     exec_output: ExecutorOutput = executor_tool(exec_input)
 
     # ── Tool 3: Critic ───────────────────────────────
-    console.print(Rule("[bold red]🔧 TOOL CALL: critic_tool[/bold red]"))
+    console.print(Rule("[bold red]TOOL CALL: critic_tool[/bold red]"))
     critic_input = CriticInput(user_task=user_input, content=exec_output.content)
     critic_output: CriticOutput = critic_tool(critic_input)
 
@@ -289,10 +270,10 @@ def run(user_input: str):
 
     # ── Conditional: Refiner Loop ─────────────────────
     if not critic_output.passed:
-        console.print(Rule("[bold yellow]🔄 REFINEMENT PIPELINE[/bold yellow]"))
+        console.print(Rule("[bold yellow]REFINEMENT PIPELINE[/bold yellow]"))
 
         for attempt in range(1, MAX_REFINEMENTS + 1):
-            console.print(f"[yellow]🔧 TOOL CALL: refiner_tool (attempt {attempt}/{MAX_REFINEMENTS})[/yellow]")
+            console.print(f"[yellow]TOOL CALL: refiner_tool (attempt {attempt}/{MAX_REFINEMENTS})[/yellow]")
 
             refiner_input = RefinerInput(
                 user_task=user_input,
@@ -304,7 +285,7 @@ def run(user_input: str):
             refiner_output: RefinerOutput = refiner_tool(refiner_input)
 
             # Re-critique with strict schema
-            console.print(f"[red]🔧 TOOL CALL: critic_tool (re-evaluation {attempt})[/red]")
+            console.print(f"[red]TOOL CALL: critic_tool (re-evaluation {attempt})[/red]")
             re_critic_input = CriticInput(
                 user_task=user_input,
                 content=refiner_output.refined_content
@@ -312,7 +293,7 @@ def run(user_input: str):
             re_critic_output: CriticOutput = critic_tool(re_critic_input)
 
             if re_critic_output.passed:
-                console.print(f"[bold green]✅ ADK PIPELINE: Content passed after {attempt} refinement(s)[/bold green]")
+                console.print(f"[bold green]ADK PIPELINE: Content passed after {attempt} refinement(s)[/bold green]")
                 final_content = refiner_output.refined_content
                 break
 
@@ -320,14 +301,14 @@ def run(user_input: str):
             critic_output = re_critic_output
 
             if attempt == MAX_REFINEMENTS:
-                console.print(f"[bold red]🛑 Max refinements ({MAX_REFINEMENTS}) reached. Pipeline complete.[/bold red]")
+                console.print(f"[bold red]Max refinements ({MAX_REFINEMENTS}) reached. Pipeline complete.[/bold red]")
                 final_content = current_content
     else:
-        console.print("[bold green]✅ ADK PIPELINE: Content passed first review![/bold green]")
+        console.print("[bold green]ADK PIPELINE: Content passed first review![/bold green]")
 
     # ── Final Output ──────────────────────────────────
-    console.print(Rule("[bold magenta]🎯 ADK PIPELINE COMPLETE[/bold magenta]"))
-    console.print(Panel(final_content, title="✅ Final Output", border_style="magenta"))
+    console.print(Rule("[bold magenta]ADK PIPELINE COMPLETE[/bold magenta]"))
+    console.print(Panel(final_content, title="Final Output", border_style="magenta"))
 
     return final_content
 

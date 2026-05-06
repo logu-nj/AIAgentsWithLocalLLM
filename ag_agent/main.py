@@ -2,31 +2,9 @@
 =============================================================
  FRAMEWORK 2 — AutoGen  |  Smart Task Executor
 =============================================================
- Flow:   User Input → Group Chat (Planner → Executor → Critic)
-                                              ↓
-                                         (FAIL signal)
-                                              ↓
-                                          Refiner → Critic (loop)
-
- Concepts demonstrated:
-  • Conversational multi-agent (GroupChat)
-  • Custom model client for Ollama (no OpenAI needed)
-  • Role-based prompting
-  • Message limit guard (cost explosion prevention)
-  • Conversation termination via TERMINATE keyword
-
- Edge cases handled:
-  • Agents arguing endlessly → max_round limit
-  • Cost explosion → message count tracked
-  • Hallucinated corrections → Critic re-validates
-=============================================================
 """
 
 import sys, os, re
-os.environ.setdefault("PYTHONIOENCODING", "utf-8")
-os.environ.setdefault("PYTHONUTF8", "1")
-if hasattr(sys.stdout, "reconfigure"):
-    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from shared.ollama_client import OLLAMA_BASE_URL, OLLAMA_MODEL, raw_generate
@@ -153,7 +131,7 @@ MESSAGE_LIMIT = 20      # Edge-case: cost explosion guard
 def run(user_input: str):
     console.print(Panel(
         f"[bold white]{user_input}[/bold white]",
-        title="[bold blue]🚀 AutoGen — Smart Task Executor[/bold blue]",
+        title="[bold blue]AutoGen - Smart Task Executor[/bold blue]",
         border_style="blue"
     ))
 
@@ -169,7 +147,7 @@ def run(user_input: str):
 
         # Cost explosion guard
         if total_messages > MESSAGE_LIMIT:
-            console.print(f"[bold red]💸 MESSAGE LIMIT ({MESSAGE_LIMIT}) REACHED — Stopping to prevent cost explosion![/bold red]")
+            console.print(f"[bold red]MESSAGE LIMIT ({MESSAGE_LIMIT}) REACHED - Stopping to prevent cost explosion![/bold red]")
             return "[TERMINATED: message limit reached]"
 
         conversation.append({"role": "user", "content": user_msg})
@@ -184,34 +162,34 @@ def run(user_input: str):
         return reply
 
     # ── Step 1: Planner ──────────────────────────────
-    console.print(Rule("[bold cyan]🧠 PLANNER[/bold cyan]"))
+    console.print(Rule("[bold cyan]PLANNER[/bold cyan]"))
     plan = agent_turn(planner, f"Create a plan for this task: {user_input}")
 
     if not plan or len(plan) < 20:
         plan = "1. Research topic\n2. Draft content\n3. Review\n4. Refine\n5. Finalize"
-        console.print("[yellow]⚠️  Bad planner output — using fallback plan.[/yellow]")
+        console.print("[yellow]Bad planner output - using fallback plan.[/yellow]")
 
     # ── Step 2: Executor ─────────────────────────────
-    console.print(Rule("[bold green]✍️  EXECUTOR[/bold green]"))
+    console.print(Rule("[bold green]EXECUTOR[/bold green]"))
     content = agent_turn(executor, f"Execute this plan and write the content:\n{plan}")
 
     if not content or len(content) < 50:
         content = "[EXECUTOR PRODUCED INSUFFICIENT CONTENT]"
-        console.print("[red]❌ Executor failure — content too short.[/red]")
+        console.print("[red]Executor failure - content too short.[/red]")
 
     # ── Step 3: Critic + Refiner Loop ────────────────
     current_content = content
     final_content = content
 
     for round_num in range(1, MAX_ROUNDS + 1):
-        console.print(Rule(f"[bold red]🔍 CRITIC — Round {round_num}/{MAX_ROUNDS}[/bold red]"))
+        console.print(Rule(f"[bold red]CRITIC - Round {round_num}/{MAX_ROUNDS}[/bold red]"))
         verdict = agent_turn(
             critic,
             f"Review this content for the task '{user_input}':\n{current_content}"
         )
 
         if "PASS" in verdict.upper() and "FAIL" not in verdict.upper():
-            console.print(f"[bold green]✅ CRITIC PASSED at round {round_num}[/bold green]")
+            console.print(f"[bold green]CRITIC PASSED at round {round_num}[/bold green]")
             final_content = current_content
             break
 
@@ -221,15 +199,15 @@ def run(user_input: str):
             idx = verdict.upper().find("FAIL")
             reason = verdict[idx:]
 
-        console.print(f"[bold yellow]🔁 CRITIC FAILED — round {round_num}: {reason}[/bold yellow]")
+        console.print(f"[bold yellow]CRITIC FAILED - round {round_num}: {reason}[/bold yellow]")
 
         if round_num == MAX_ROUNDS:
-            console.print(f"[bold red]🛑 Max rounds ({MAX_ROUNDS}) reached. Keeping best content.[/bold red]")
+            console.print(f"[bold red]Max rounds ({MAX_ROUNDS}) reached. Keeping best content.[/bold red]")
             final_content = current_content
             break
 
         # Refine
-        console.print(Rule(f"[bold yellow]🔧 REFINER — Round {round_num}[/bold yellow]"))
+        console.print(Rule(f"[bold yellow]REFINER - Round {round_num}[/bold yellow]"))
         refined = agent_turn(
             refiner,
             f"Fix this content (reason: {reason}):\n{current_content}"
@@ -237,9 +215,9 @@ def run(user_input: str):
         current_content = refined if refined and len(refined) > 50 else current_content
 
     # ── Final Output ──────────────────────────────────
-    console.print(Rule("[bold blue]🎯 FINAL OUTPUT[/bold blue]"))
-    console.print(Panel(final_content, title="✅ Result", border_style="blue"))
-    console.print(f"\n[dim]📊 Total messages exchanged: {total_messages} | Ollama calls: {client.message_count}[/dim]")
+    console.print(Rule("[bold blue]FINAL OUTPUT[/bold blue]"))
+    console.print(Panel(final_content, title="Result", border_style="blue"))
+    console.print(f"\n[dim]Total messages exchanged: {total_messages} | Ollama calls: {client.message_count}[/dim]")
 
     return final_content
 
