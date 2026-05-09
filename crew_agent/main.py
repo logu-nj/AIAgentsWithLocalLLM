@@ -4,7 +4,9 @@
 =============================================================
 """
 
-import sys, os
+import sys
+import os
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from crewai import Agent, Task, Crew, Process, LLM
@@ -37,7 +39,7 @@ numbered step-by-step plans that leave no room for ambiguity.
 You ONLY output the plan — no commentary, no preamble.""",
     llm=ollama_llm,
     verbose=True,
-    allow_delegation=False,   # No role confusion — planner plans only
+    allow_delegation=False,  # No role confusion — planner plans only
     max_iter=3,
 )
 
@@ -81,6 +83,7 @@ content to be comprehensive, accurate, and compelling.""",
 # ─────────────────────────────────────────────
 #  2. BUILD TASKS (with context dependencies)
 # ─────────────────────────────────────────────
+
 
 def build_tasks(user_input: str):
     planning_task = Task(
@@ -137,12 +140,15 @@ The improved version should clearly pass a quality review.""",
 
 MAX_REFINEMENTS = 3
 
+
 def run(user_input: str):
-    console.print(Panel(
-        f"[bold white]{user_input}[/bold white]",
-        title="[bold yellow]CrewAI - Smart Task Executor[/bold yellow]",
-        border_style="yellow"
-    ))
+    console.print(
+        Panel(
+            f"[bold white]{user_input}[/bold white]",
+            title="[bold yellow]CrewAI - Smart Task Executor[/bold yellow]",
+            border_style="yellow",
+        )
+    )
 
     planning_task, execution_task, critic_task, refiner_task = build_tasks(user_input)
 
@@ -169,7 +175,9 @@ def run(user_input: str):
         console.print(Rule("[bold orange3]Phase 2: Refinement Loop[/bold orange3]"))
 
         for attempt in range(1, MAX_REFINEMENTS + 1):
-            console.print(f"[yellow]Refinement attempt {attempt}/{MAX_REFINEMENTS}[/yellow]")
+            console.print(
+                f"[yellow]Refinement attempt {attempt}/{MAX_REFINEMENTS}[/yellow]"
+            )
 
             # Build a fresh refiner task with updated context
             fresh_refiner_task = Task(
@@ -203,12 +211,24 @@ Respond with EXACTLY "PASS" or "FAIL: <reason>". Be strict.""",
 
             ref_result = refinement_crew.kickoff()
             new_verdict = str(ref_result.raw).strip()
-            new_content = str(fresh_refiner_task.output.raw if fresh_refiner_task.output else current_content)
+            new_content = str(
+                fresh_refiner_task.output.raw
+                if fresh_refiner_task.output
+                else current_content
+            )
 
-            console.print(Panel(new_verdict, title=f"Re-Critic Verdict (attempt {attempt})", border_style="red"))
+            console.print(
+                Panel(
+                    new_verdict,
+                    title=f"Re-Critic Verdict (attempt {attempt})",
+                    border_style="red",
+                )
+            )
 
             if "PASS" in new_verdict.upper() and "FAIL" not in new_verdict.upper():
-                console.print(f"[bold green]PASSED after {attempt} refinement(s)![/bold green]")
+                console.print(
+                    f"[bold green]PASSED after {attempt} refinement(s)![/bold green]"
+                )
                 final_content = new_content
                 break
 
@@ -216,7 +236,9 @@ Respond with EXACTLY "PASS" or "FAIL: <reason>". Be strict.""",
             critic_output = new_verdict
 
             if attempt == MAX_REFINEMENTS:
-                console.print(f"[bold red]Max refinements ({MAX_REFINEMENTS}) reached. Using best version.[/bold red]")
+                console.print(
+                    f"[bold red]Max refinements ({MAX_REFINEMENTS}) reached. Using best version.[/bold red]"
+                )
                 final_content = current_content
     else:
         console.print("[bold green]Content PASSED on first try![/bold green]")

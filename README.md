@@ -14,11 +14,6 @@ multi-agent-learning/
 ├── lg_agent/           # LangGraph implementation
 ├── shared/             # Shared utilities and Ollama client
 ├── prompts/            # Centralized system and agent prompts
-<<<<<<< HEAD
-=======
-├── test-cases/         # Edge case definitions (loops, failures, etc.)
-├── compare_all.py      # Script to run and compare all frameworks
->>>>>>> a3b2a3ff65d09dda48a2b4756fbb30c14156401b
 ├── run.py              # Main entry point runner
 └── pyproject.toml / requirements.txt
 ```
@@ -38,10 +33,9 @@ This project uses a virtual environment to manage dependencies.
 
 1. **Navigate to the project directory:**
    ```bash
-   cd multi-agent-learning
+   cd AIAgentsWithLocalLLM
    ```
 
-<<<<<<< HEAD
 2. **Create a virtual environment:**
    ```bash
    python -m venv .venv
@@ -52,9 +46,6 @@ This project uses a virtual environment to manage dependencies.
    - **Mac/Linux:** `source .venv/bin/activate`
 
 4. **Install dependencies:**
-=======
-2. **Install dependencies:**
->>>>>>> a3b2a3ff65d09dda48a2b4756fbb30c14156401b
    *(If you are using `uv` which is configured in this project)*
    ```bash
    uv sync
@@ -64,28 +55,6 @@ This project uses a virtual environment to manage dependencies.
    pip install -r requirements.txt
    ```
 
-<<<<<<< HEAD
-=======
-3. **Activate the virtual environment:**
-   - **Windows:** `.venv\Scripts\activate`
-   - **Mac/Linux:** `source .venv/bin/activate`
-
-## 🐛 Debugging in VS Code
-
-A custom `.vscode/launch.json` is provided to ensure smooth debugging within your virtual environment.
-
-1. **Select the correct Python Interpreter:**
-   - Press `Ctrl+Shift+P` (or `Cmd+Shift+P` on Mac).
-   - Type and select **`Python: Select Interpreter`**.
-   - Choose the interpreter located in your project's `.venv` folder (e.g., `./.venv/Scripts/python.exe`).
-   
-2. **Start Debugging:**
-   - Open the specific python file you want to debug (for example, `lg_agent/main.py`).
-   - **IMPORTANT:** Make sure the Python script is the active tab in VS Code.
-   - Press **`F5`** or go to `Run > Start Debugging`. 
-   - *Note: Avoid the "Play" button in the top right corner as it might bypass the launch configuration.*
-
->>>>>>> a3b2a3ff65d09dda48a2b4756fbb30c14156401b
 ## 🧪 Running the Comparisons
 
 To run a specific agent framework or the full comparative test, you can use the provided runner scripts:
@@ -93,17 +62,4 @@ To run a specific agent framework or the full comparative test, you can use the 
 ```bash
 # Run a specific framework's implementation
 python run.py
-<<<<<<< HEAD
 ```
-=======
-
-# Run the comprehensive comparison across all frameworks
-python compare_all.py
-```
-
-## 🎯 Testing Edge Cases
-The framework includes built-in stress testing located in the `test-cases` directory. These tests evaluate how each framework handles:
-- Circular dependencies and infinite loops
-- LLM hallucinations and token limit explosions
-- Task validation failures and retry limits
->>>>>>> a3b2a3ff65d09dda48a2b4756fbb30c14156401b
